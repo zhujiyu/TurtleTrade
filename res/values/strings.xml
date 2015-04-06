@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">海龟交易</string>
+    <string name="hello_world">海龟交易</string>
+    <string name="action_settings">设置</string>
+
+    <string name="code_name_head">证券代码</string>
+    <string name="code_name_row">证券名称</string>
+    <string name="price_head">当前价格</string>
+    <string name="price_row"></string>
+    <string name="high_head">20日最高价</string>
+    <string name="high_row">证券名称</string>
+    
+</resources>
