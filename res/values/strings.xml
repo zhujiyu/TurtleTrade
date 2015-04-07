@@ -5,11 +5,10 @@
     <string name="hello_world">海龟交易</string>
     <string name="action_settings">设置</string>
 
-    <string name="code_name_head">证券代码</string>
-    <string name="code_name_row">证券名称</string>
-    <string name="price_head">当前价格</string>
-    <string name="price_row"></string>
-    <string name="high_head">20日最高价</string>
-    <string name="high_row">证券名称</string>
+    <string name="stock_code">证券代码</string>
+    <string name="stock_name">证券名称</string>
+    <string name="curr_price">当前价格</string>
+    <string name="high_price">20日最高价</string>
+    <string name="low_price">10日最低价</string>
     
 </resources>

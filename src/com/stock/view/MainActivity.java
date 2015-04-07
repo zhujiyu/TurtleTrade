@@ -19,7 +19,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 
 
 public class MainActivity extends Activity {
@@ -43,13 +42,12 @@ public class MainActivity extends Activity {
         mHandler.post(loaddata);
     }
 
-    private ListView listView;
-    String[] codes = {"601857", "600036", "601299"};
-    String[] names = {"中国石油", "招商银行", "中国北车"};
-    List<Map<String, Object>> stocklist = null;
-    
     private Handler mHandler;
-//    private HandlerThread mHandlerThread;
+    private ListView listView;
+    
+    String[] codes = {"601857", "600036", "601299", "000001"};
+    String[] names = {"中国石油", "招商银行", "中国北车", "上证指数"};
+    List<Map<String, Object>> stocklist = null;
     
     Runnable loaddata = new Runnable(){
 		@Override
@@ -63,11 +61,7 @@ public class MainActivity extends Activity {
     Runnable setAdapter = new Runnable(){
 		@Override
 		public void run() {
-//			MainActivity.this.setListAdapter();
-//			String[] titles = {"name", "code", "current", "high", "low"};
-//			int[] ids = {R.id.stock_name, R.id.stock_code, R.id.current_price, R.id.high_20days, R.id.low_10days};
-			
-	    	SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, 
+			StockRowAdapter adapter = new StockRowAdapter(MainActivity.this, 
 	    			stocklist, R.layout.row, //titles, ids);
 	                new String[]{"name", "code", "current", "high", "low"},
 	                new int[]{R.id.stock_name, R.id.stock_code, R.id.current_price, R.id.high_20days, R.id.low_10days});
@@ -89,6 +83,7 @@ public class MainActivity extends Activity {
     	Map<String, Object> map = new HashMap<String, Object>();
     	map.put("name", name);
     	map.put("code", code);
+    	map.put("current", stock.close);
     	map.put("high", buy_index.get(0));
     	map.put("low", sell_index.get(0));
     	list.add(map);
@@ -101,7 +96,7 @@ public class MainActivity extends Activity {
     	List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
     	try {
-	    	for( int i = 0; i < 3; i ++ ) {
+	    	for( int i = 0; i < codes.length; i ++ ) {
 	    		loadStockInfo(list, codes[i], names[i], buy_index, sell_index);
 	    	}
     	} catch ( Exception ex ) {

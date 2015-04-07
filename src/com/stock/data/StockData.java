@@ -104,35 +104,25 @@ public class StockData extends PriceBar {
 			for(int i = 0; cellIter.hasNext(); i ++ ) {
 				String cell = cellIter.next().toUpperCase(Locale.CHINA);
 				
-				switch(cell) {
-				case "OPEN" :
+				if( cell.equals("OPEN") )
 					fields[i] = PriceBar.PRICE_OPEN;
-					break;
-				case "CLOSE" :
+				else if( cell.equals("CLOSE") )
 					fields[i] = PriceBar.PRICE_CLOSE;
-					break;
-				case "HIGH" :
+				else if( cell.equals("HIGH") )
 					fields[i] = PriceBar.PRICE_HIGH;
-					break;
-				case "LOW" :
+				else if( cell.equals("LOW") )
 					fields[i] = PriceBar.PRICE_LOW;
-					break;
-				case "VOLUME" :
+				else if( cell.equals("VOLUME") )
 					fields[i] = PriceBar.VOLUME;
-					break;
-				case "DATE" :
+				else if( cell.equals("DATE") )
 					fields[i] = PriceBar.START;
-					break;
-				default:
-					break;
-				}
 			}
 		} // end of if
 		
 		while( rowIter.hasNext() ) {
+			PriceBar bar = new PriceBar(4*60);
 			List<String> rec = rowIter.next();
 			Iterator<String> cellIter = rec.iterator();
-			PriceBar bar = new PriceBar(4*60);
 			
 			for(int i = 0; cellIter.hasNext(); i ++ ) {
 				String cell = cellIter.next();
@@ -142,11 +132,10 @@ public class StockData extends PriceBar {
 //						bar.start = Calendar.getInstance();
 						bar.start.setTime(date);
 					}
-					else if( fields[i] == PriceBar.VOLUME ) {
-						bar.set(fields[i], Double.parseDouble(cell));
-					}
+//					else if( fields[i] == PriceBar.VOLUME ) {
+//						bar.set(fields[i], Double.parseDouble(cell));
+//					}
 					else {
-//						double price = Double.parseDouble(cell);
 						bar.set(fields[i], Double.parseDouble(cell));
 					}
 				}
