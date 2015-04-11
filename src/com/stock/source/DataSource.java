@@ -1,12 +1,15 @@
 package com.stock.source;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 
 import java.net.HttpURLConnection;
@@ -26,9 +29,11 @@ import android.os.Environment;
 
 public class DataSource {
 	public static final String sdpath = Environment.getExternalStorageDirectory().getPath();//"/mnt/sdcard/";
-//	public static final String stockdatapath = sdpath + "/turtletrade/stockdata/";
 	
-	public static final int SOUREC_LOCAL  = 0;
+	public static final int MARKET_SHANGHAI = 3;
+	public static final int MARKET_SHENZHEN = 4;
+	
+	public static final int SOUREC_LOCAL = 0;
 	public static final int SOUREC_YAHOO = 1;
 	public static final int SOUREC_SINA  = 2;
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", 
@@ -36,19 +41,18 @@ public class DataSource {
 
 	protected String name = "中国石油";
 	protected String code = "601857";
-	protected String market = "ss";
+	protected int market = MARKET_SHANGHAI;
 	protected List< List<String> > price_list = new ArrayList< List<String> >();
 	
-	public DataSource(String _code, String _market) {
+	public DataSource(String _code, int _market) {
 		code = _code;
 		market = _market;
 	}
 
-	public String getStockFilePath() {
+	public String getPath() {
 		String status = Environment.getExternalStorageState();
-		if( !status.equals(Environment.MEDIA_MOUNTED) ) {
+		if( !status.equals(Environment.MEDIA_MOUNTED) ) 
 			throw new java.lang.SecurityException();
-		}
 		
 		String sDir = sdpath + "/turtletrade";
 		File destDir = new File(sDir);
@@ -60,17 +64,21 @@ public class DataSource {
 		if( !destDir.exists() ) 
 			destDir.mkdirs();
 		
-		return sDir + "/" + market + code + ".csv";
+		return sDir;
 	}
-//	public abstract List<List<String>> get(Calendar start, Calendar end) throws IOException;
 
-	String url = "";
-    public String getUrl() {
-    	return url;
-    }
+	public String getCacheFile() {
+		String mkt = market == MARKET_SHANGHAI ? "sh" : "sz";
+		return getPath() + "/" + mkt + code + ".cache.csv";
+	}
 
-	public List<List<String>> LocalData() throws IOException {
-		File file = new File(getStockFilePath());
+	public String getStockFile() {
+		String mkt = market == MARKET_SHANGHAI ? "sh" : "sz";
+		return getPath() + "/" + mkt + code + ".csv";
+	}
+
+	public List<List<String>> LocalData(String csvfile) throws IOException {
+		File file = new File(csvfile);
 		if( !file.exists() )
 			return null;
 
@@ -153,6 +161,41 @@ public class DataSource {
         }
     }
 
+    public void SaveCSVFile(List<List<String>> data, String csvfile) 
+    		throws IOException {
+        FileWriter fw = new FileWriter(new File(csvfile), false);
+        BufferedWriter bow = new BufferedWriter(fw);
+
+    	try {
+            Iterator<List<String>> iter = data.iterator();
+            while( iter.hasNext() ) {
+            	List<String> list = iter.next();
+            	String text = "";
+            	
+            	Iterator<String> _cell = list.iterator();
+            	while( _cell.hasNext() ) {
+            		text += _cell.next() + ",";
+            	}
+            	
+            	bow.write(text);
+            	bow.newLine();
+            }
+            bow.flush();
+		} 
+    	
+    	catch (IOException e) {
+			e.printStackTrace();
+		}
+
+        finally
+        {
+        	if( bow != null )
+        		bow.close();
+        	if( fw != null )
+        		fw.close();
+        }
+    }
+    
 	/**解析csv文件 到一个list中 每个单元个为一个String类型记录，每一行为一个list。 再将所有的行放到一个总list中
 	 * @param br 
 	 * @param price_list

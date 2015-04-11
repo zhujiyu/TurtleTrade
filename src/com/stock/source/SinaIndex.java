@@ -7,18 +7,19 @@ import java.util.regex.Pattern;
 public class SinaIndex extends DataSource {
 	public static final String INDEX_URL = "http://hq.sinajs.cn/list=s_";
 
-	public SinaIndex(String _code, String _market) {
-		super(_code, _market);
-	}
-
 	public double CurrentPoint;
 	public double Range;
 	public double Ratio;
 	public double volume;
 	
+	public SinaIndex(String _code, int _market) {
+		super(_code, _market);
+	}
+
 	public double getNewPrice() {
 		try {
-			String text = WebData(INDEX_URL + code);
+			String url = INDEX_URL + (market == MARKET_SHANGHAI ? "sh" : "sz") + code;
+			String text = WebData(url);
 			this.Parse(text);
 		} catch (IOException e) {
 			e.printStackTrace();

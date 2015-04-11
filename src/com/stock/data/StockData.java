@@ -3,12 +3,11 @@ package com.stock.data;
 import java.io.IOException;
 import java.text.ParseException;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Locale;
 
@@ -16,16 +15,15 @@ import com.stock.source.DataSource;
 import com.stock.source.YahooStock;
 
 public class StockData extends PriceBar {
-
-	public static final int CODE = 1;
+	public static final int CODE   = 1;
 	public static final int MARKET = 2;
-	
-	private String code = "601857";
-	private String market =  "ss";
-	private DataSource datasource;
+
 	private List<PriceBar> bar_list = new ArrayList<PriceBar>();
+	private String code = "601857";
+	private int market = DataSource.MARKET_SHANGHAI;
 	
-	public StockData(String code, String market) {
+	public StockData(String code, int market) {
+		super();
 		this.code = code;
 		this.market = market;
 	}
@@ -38,63 +36,127 @@ public class StockData extends PriceBar {
 		return bar_list.size();
 	}
 	
-	public void load() {
-		try {
-			datasource = new YahooStock(this.code, this.market);
-			List<List<String>> data = datasource.LocalData();
-			
-			if( data == null ) {
-				data = ((YahooStock)datasource).get(start);
-			}
-
-			if( data != null )
-				this.Parse(data);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void load(Date start, Date end) 
-	{
-		Calendar start_time = new GregorianCalendar();
-		start_time.setTime(start);
-		Calendar end_date = new GregorianCalendar();
-		end_date.setTime(end);
+	public void append(Calendar _end, YahooStock yahoo) 
+			throws IOException {
+		String cachefile = yahoo.getCacheFile();
+		String csvfile = yahoo.getStockFile();
 		
+		List<List<String>> data = yahoo.get(_end, cachefile);
+		if( data == null || data.size() < 2 )
+			return;
+		
+		ArrayList<PriceBar> bars = new ArrayList<PriceBar>();
+		this.Parse(data, bars);
+		if( bars.size() == 0 )
+			return;
+		
+		Calendar _nstart = bars.get(bars.size()-1).start;
+		Calendar _oend_   = bar_list.get(0).start;
+		
+		if( _oend_.before(_nstart) ) {
+			Iterator<PriceBar> iter = bar_list.iterator();
+			while( iter.hasNext() ) 
+				bars.add(iter.next());
+			bar_list = bars;
+			
+			data = Format(bar_list);
+			yahoo.SaveCSVFile(data, csvfile);
+		}
+	}
+	
+	public void load() {
+		Calendar yesterday = Calendar.getInstance();
+		Calendar yearago   = Calendar.getInstance();
+		yesterday.add(Calendar.DATE, -1);
+		yearago.add(Calendar.YEAR, -1);
+		Calendar _stt = yearago;
+
+		YahooStock yahoo = new YahooStock(code, market);
+		String csvfile = yahoo.getStockFile();
+		List<List<String>> data = null;
+		
+		// first read local file.
 		try {
-			List<List<String>> data = datasource.LocalData();
-			this.Parse(data);
+			data = yahoo.LocalData(csvfile);
+			if( data != null ) {
+				this.Parse(data, bar_list);
+				if( bar_list != null && bar_list.size() > 0 ) {
+					_stt = bar_list.get(bar_list.size() - 1).start;
+				}
+			}
 		} catch (IOException e) {
-//			String url = ((WebSource)datasource).getUrl();
-//			System.out.println("download data from " + url + " failed.");
 			e.printStackTrace();
 		}
-	}
-	
-//	public void load(Date start, int source) 
-//	{
-//		if( source == DataSource.SOUREC_LOCAL )
-//			datasource = new DataSource(this.code, this.market);
-//		else if( source == DataSource.SOUREC_YAHOO )
-//			datasource = new YahooStock(this.code, this.market);
-//		else if( source == DataSource.SOUREC_SINA )
-//			datasource = new SinaStock(this.code, this.market);
-//		this.load(start, new Date());
-//	}
-	
-	public String getInfo(int field) {
-		switch(field) {
-		case CODE:
-			return this.code;
-		case MARKET:
-			return this.market;
+		
+		// download from yahoo api
+		// if there is't local data or start date after a year age
+		try {
+			if( data == null || _stt.after(yearago) ) {
+				data = yahoo.get(yearago, csvfile);
+				if( data != null ) {
+					this.Parse(data, bar_list);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		return null;
+		
+		// download data from yahoo api
+		// if there is't recent some days data.
+		try {
+			if( bar_list != null && bar_list.size() > 0 ) {
+				Calendar _end = bar_list.get(0).start;
+				if( _end.before(yesterday) ) { 
+					_end.add(Calendar.DATE, 1);
+					append(_end, yahoo);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// load today's data from sina api.
+//		SinaStock sina = new SinaStock(code, market);
+//		PriceBar bar = sina.getNewPrice();
+//		bar_list.add(bar);
+		
+		this.Statistic();
 	}
 	
-	public void Parse(List<List<String>> _data) {
+	public List<List<String>> Format(List<PriceBar> bars) {
+		List<List<String>> data = new ArrayList<List<String>>();
+		List<String> head = new ArrayList<String>();
+		int[] fields = {START, PRICE_OPEN, PRICE_CLOSE, PRICE_HIGH, PRICE_LOW, VOLUME};
+		String[] heads = {"DATE", "OPEN", "CLOSE", "HIGH", "LOW", "VOLUME"};
+		
+		for( int i = 0; i < fields.length; i ++ ) {
+			head.add(heads[i]);
+		}
+		data.add(head);
+		
+		Iterator<PriceBar> iter = bars.iterator();
+		while( iter.hasNext() ) {
+			PriceBar bar = iter.next();
+			List<String> row = new ArrayList<String>();
+
+			String date = DataSource.DATE_FORMAT.format(bar.start.getTime());
+			row.add(date);
+			
+			for( int i = 1; i < fields.length; i ++ ) {
+				double d = bar.get(fields[i]);
+				String s = Double.toString(d);
+				row.add(s);
+			}
+			
+			data.add(row);
+		}
+		
+		return data;
+	}
+	
+	protected void Parse(List<List<String>> data, List<PriceBar> bars) {
 		int[] fields = null;
-		Iterator<List<String>> rowIter = _data.iterator();
+		Iterator<List<String>> rowIter = data.iterator();
 		
 		if( rowIter.hasNext() ) {
 			List<String> rec = rowIter.next();
@@ -147,13 +209,13 @@ public class StockData extends PriceBar {
 				}
 			}
 
-			bar_list.add(bar);
+			bars.add(bar);
 		} // end of while
 		
-		this.Statistic();
+//		this.Statistic();
 	}// end of parse
 	
-	public void Statistic() {
+	protected void Statistic() {
 		Iterator<PriceBar> iter = bar_list.iterator();
 		PriceBar bar = null;
 		
@@ -179,6 +241,9 @@ public class StockData extends PriceBar {
 		}
 	}
 	
+	/**
+	 * 取价格对数
+	 */
 	public void log() {
 		Iterator< PriceBar > iter = bar_list.iterator();
 		PriceBar bar = null;
@@ -200,11 +265,14 @@ public class StockData extends PriceBar {
 	private PriceBar NewWeekBar(PriceBar dbar) {
 		PriceBar wbar = new PriceBar(1200);
 		wbar.start = dbar.start;
+		
 		wbar.high = dbar.high;
 		wbar.low = dbar.low;
 		wbar.open = dbar.open;
 		wbar.close = dbar.close;
+		
 		wbar.volume = dbar.volume;
+		
 		return wbar;
 	}
 	
@@ -254,9 +322,51 @@ public class StockData extends PriceBar {
 		
 		return weekbars;
 	}
-
-	public void print() {
-		datasource.print();
-	}
-	
 }
+
+//public PriceBar todayPrice() {
+//	SinaStock sina = new SinaStock(code, market);
+//	return sina.getNewPrice();
+//}
+
+//public String getInfo(int field) {
+//	switch(field) {
+//	case CODE:
+//		return this.code;
+//	case MARKET:
+//		return this.market;
+//	}
+//	return null;
+//}
+
+//public void print() {
+//	datasource.print();
+//}
+
+//public void load(Date start, Date end) 
+//{
+//	Calendar start_time = new GregorianCalendar();
+//	start_time.setTime(start);
+//	Calendar end_date = new GregorianCalendar();
+//	end_date.setTime(end);
+//	
+//	try {
+//		List<List<String>> data = datasource.LocalData();
+//		this.Parse(data);
+//	} catch (IOException e) {
+////		String url = ((WebSource)datasource).getUrl();
+////		System.out.println("download data from " + url + " failed.");
+//		e.printStackTrace();
+//	}
+//}
+
+//public void load(Date start, int source) 
+//{
+//	if( source == DataSource.SOUREC_LOCAL )
+//		datasource = new DataSource(this.code, this.market);
+//	else if( source == DataSource.SOUREC_YAHOO )
+//		datasource = new YahooStock(this.code, this.market);
+//	else if( source == DataSource.SOUREC_SINA )
+//		datasource = new SinaStock(this.code, this.market);
+//	this.load(start, new Date());
+//}

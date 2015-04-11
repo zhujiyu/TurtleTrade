@@ -10,6 +10,7 @@ import com.stock.data.StockData;
 import com.stock.index.StockIndex;
 import com.stock.index.TurtleIndex;
 
+import com.stock.source.DataSource;
 import com.stock.turtle.R;
 import android.app.Activity;
 import android.os.Bundle;
@@ -46,8 +47,10 @@ public class MainActivity extends Activity {
     private Handler mHandler;
     private ListView listView;
     
-    String[] codes = {"601857", "600036", "601299", "000001"};
-    String[] names = {"中国石油", "招商银行", "中国北车", "上证指数"};
+    String[] codes = {"601857", "000001", "601299", "000001"};
+    String[] names = {"中国石油", "平安银行", "中国北车", "上证指数"};
+    int[] markets = {DataSource.MARKET_SHANGHAI, DataSource.MARKET_SHENZHEN, 
+    		DataSource.MARKET_SHANGHAI, DataSource.MARKET_SHANGHAI}; 
     List<Map<String, Object>> stocklist = null;
     
     Runnable loaddata = new Runnable(){
@@ -71,10 +74,10 @@ public class MainActivity extends Activity {
 		}
     };
     
-    private void loadStockInfo(List<Map<String, Object>> list, 
-    		String code, String name, StockIndex buy_index, StockIndex sell_index) {
-		Log.i(TAG, "load " + name + " data.");
-		StockData stock = new StockData(code, "ss");
+    private Map<String, Object> loadStockInfo(String code, int market,
+    		StockIndex buy_index, StockIndex sell_index) {
+//		Log.i(TAG, "load " + name + " data.");
+		StockData stock = new StockData(code, market);
 		stock.load();
 		
 		List<PriceBar> bars = stock.getBarSet();
@@ -82,12 +85,11 @@ public class MainActivity extends Activity {
     	sell_index.calcIndex(bars);
 
     	Map<String, Object> map = new HashMap<String, Object>();
-    	map.put("name", name);
     	map.put("code", code);
     	map.put("current", stock.close);
     	map.put("high", buy_index.get(0));
     	map.put("low", sell_index.get(0));
-    	list.add(map);
+    	return map;
     }
     
     private List<Map<String, Object>> LoadStockList() {
@@ -96,12 +98,12 @@ public class MainActivity extends Activity {
     	StockIndex sell_index = new TurtleIndex(20, StockIndex.DIRECT_SELL);
     	List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
-    	try {
-	    	for( int i = 0; i < codes.length; i ++ ) {
-	    		loadStockInfo(list, codes[i], names[i], buy_index, sell_index);
-	    	}
-    	} catch ( Exception ex ) {
-    		ex.printStackTrace();
+    	for( int i = 0; i < 3; i ++ ) {
+    		Map<String, Object> map = null;
+			map = loadStockInfo(codes[i], markets[i], 
+					buy_index, sell_index);
+    		map.put("name", names[i]);
+    		list.add(map);
     	}
     	
     	return list;

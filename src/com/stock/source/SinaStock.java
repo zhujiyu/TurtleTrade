@@ -6,10 +6,18 @@ import java.util.regex.Pattern;
 
 import com.stock.data.PriceBar;
 
+/**新浪股票接口<br>
+ * 接口网址例子：http://hq.sinajs.cn/list=sh601006
+ * 沪市代码 sh 
+ * 深市代码 sz
+ * 参考文档：<br>
+ * http://www.cnblogs.com/yunzi/p/3213022.html<br>
+ * @author jiyu
+ */
 public class SinaStock extends DataSource {
 	public static final String STOCK_URL = "http://hq.sinajs.cn/list=";
 	
-	public SinaStock(String _code, String _market) {
+	public SinaStock(String _code, int _market) {
 		super(_code, _market);
 	}
 
@@ -17,7 +25,8 @@ public class SinaStock extends DataSource {
 		PriceBar bar = new PriceBar();
 
 		try {
-			String text = WebData(STOCK_URL + code);
+			String url = STOCK_URL + (market == MARKET_SHANGHAI ? "sh" : "sz") + code;
+			String text = WebData(url);
 			this.Parse(text, bar);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -62,5 +71,4 @@ public class SinaStock extends DataSource {
 		if( mCells.find() )
 			bar.volume = Double.parseDouble( mCells.group() ) / 10000;
 	}
-
 }

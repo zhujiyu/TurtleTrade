@@ -29,13 +29,12 @@ public class PriceBar {
 	public double volume;
 	
 	public Calendar start;
-//	public Date  start = new Date();
 	public int minutes;
 
 	public PriceBar() {
 		start = Calendar.getInstance();
-		start.setTime(new Date());
-		start.add(Calendar.YEAR, -1);
+//		start.setTime(new Date());
+//		start.add(Calendar.YEAR, -1);
 	}
 	
 	public PriceBar(int minutes) {
@@ -43,19 +42,19 @@ public class PriceBar {
 		this.minutes = minutes;
 	}
 	
-	public PriceBar(Calendar start, int minutes) {
-		start = Calendar.getInstance();
-		this.start = start;
-		this.minutes = minutes;
-	}
-	
 	public PriceBar clone() {
-		PriceBar bar = new PriceBar(this.start, this.minutes);
+		PriceBar bar = new PriceBar();
+		
+		bar.start = this.start;
+		bar.minutes = this.minutes;
+		
 		bar.close = this.close;
 		bar.high = this.high;
 		bar.low = this.low;
 		bar.open = this.open;
+		
 		bar.volume = this.volume;
+		
 		return bar;
 	}
 	
@@ -118,3 +117,9 @@ public class PriceBar {
 		this.start.setTime(date);
 	}
 }
+
+//public PriceBar(Calendar start, int minutes) {
+//	start = Calendar.getInstance();
+//	this.start = start;
+//	this.minutes = minutes;
+//}
