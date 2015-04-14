@@ -131,7 +131,8 @@ public class DataSource {
 	        bis = new BufferedInputStream(httpUrl.getInputStream());
 
 	        File file = new File(localFilePath);
-	        bos = new BufferedOutputStream(new FileOutputStream(file));
+	        FileOutputStream fos = new FileOutputStream(file, false);
+	        bos = new BufferedOutputStream(fos);
 
 	        int len = 2048;
 	        byte[] b = new byte[len];

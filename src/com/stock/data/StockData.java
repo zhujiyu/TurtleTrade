@@ -38,10 +38,7 @@ public class StockData extends PriceBar {
 	
 	public void append(Calendar _end, YahooStock yahoo) 
 			throws IOException {
-		String cachefile = yahoo.getCacheFile();
-		String csvfile = yahoo.getStockFile();
-		
-		List<List<String>> data = yahoo.get(_end, cachefile);
+		List<List<String>> data = yahoo.get(_end, yahoo.getCacheFile());
 		if( data == null || data.size() < 2 )
 			return;
 		
@@ -51,17 +48,17 @@ public class StockData extends PriceBar {
 			return;
 		
 		Calendar _nstart = bars.get(bars.size()-1).start;
-		Calendar _oend_   = bar_list.get(0).start;
+		Calendar _oend   = bar_list.get(0).start;
+		if( !_oend.before(_nstart) )
+			return;
+
+		Iterator<PriceBar> iter = bar_list.iterator();
+		while( iter.hasNext() ) 
+			bars.add(iter.next());
+		bar_list = bars;
 		
-		if( _oend_.before(_nstart) ) {
-			Iterator<PriceBar> iter = bar_list.iterator();
-			while( iter.hasNext() ) 
-				bars.add(iter.next());
-			bar_list = bars;
-			
-			data = Format(bar_list);
-			yahoo.SaveCSVFile(data, csvfile);
-		}
+		data = Format(bar_list);
+		yahoo.SaveCSVFile(data, yahoo.getStockFile());
 	}
 	
 	public void load() {
@@ -91,6 +88,7 @@ public class StockData extends PriceBar {
 		// download from yahoo api
 		// if there is't local data or start date after a year age
 		try {
+			_stt.add(Calendar.DATE, -14);
 			if( data == null || _stt.after(yearago) ) {
 				data = yahoo.get(yearago, csvfile);
 				if( data != null ) {
