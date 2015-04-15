@@ -2,11 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical" xmlns:app="http://schemas.android.com/apk/res/com.stock.turtle">
 
-    <com.stock.drawing.BrokenLineView
+    <com.stock.view.BrokenLineView
         android:id="@+id/brokenLineView1"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        app:sh_stocks="601299,600010"
+        app:sz_stocks="000731" />
 
 </LinearLayout>

@@ -1,6 +1,7 @@
-package com.stock.drawing;
+package com.stock.view;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,11 +14,10 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.view.View;
 
-public class BrokenLineView extends View {
+public class BrokenLineView extends StockPhoto {
 
-	List<StockData> stocks = new ArrayList<StockData>();
+	public List<StockData> stocks = new ArrayList<StockData>();
 	
 	public BrokenLineView(Context context) {
 		super(context);
@@ -56,8 +56,20 @@ public class BrokenLineView extends View {
     		stocks.add(new StockData("600036", DataSource.MARKET_SHANGHAI));
 	}
 	
+	private void DrawBrokenLine(Canvas canvas, StockData stock) {
+//		if( )
+	}
+	
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+		
+		Iterator<StockData> iter = stocks.iterator();
+		while( iter.hasNext() ) {
+			StockData stock = iter.next();
+			if( stock.getBarSet().size() == 0 )
+				continue;
+			DrawBrokenLine(canvas, stock);
+		}
 	}
 }

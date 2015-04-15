@@ -1,34 +1,41 @@
-package com.stock.drawing;
+package com.stock.view;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.util.AttributeSet;
 
 import com.stock.data.PriceBar;
 import com.stock.data.StockData;
 import com.stock.index.StockIndex;
 
-public class CandleImage {
+public class CandleImage extends StockPhoto {
+	
+	public CandleImage(Context context) {
+		super(context);
+	}
+	
+	public CandleImage(Context context, AttributeSet attrs) {
+		super(context, attrs);
+	}
 
 	private List<PriceBar> bar_list;
 	private List<StockIndex> indexes = new ArrayList<StockIndex>();
 	
-	private int step = 8;
 	private int trans = 0;  ///< transform the initialize position of candle image to left 
 	private int scoll = 0;  ///< scoll screen
-	private float scale = .8f;
-	private int background = Color.BLACK;
 	
-	public CandleImage(StockData data) {
-		this.bar_list = data.getBarSet();
-	}
+//	public CandleImage(StockData data) {
+//		this.bar_list = data.getBarSet();
+//	}
 	
 	public void AddIndex(StockIndex index) {
 		index.calcIndex(bar_list);
@@ -166,29 +173,6 @@ public class CandleImage {
 			
 			x -= step;
 			middle -= step;
-		}
-	}
-	
-	private void drawVolume(Canvas g, Paint p, PriceBar[] bars, Rect rect, double maxv) {
-		int delta = step / 8, bar_width = step * 3 / 4;
-		int x = rect.width() - step + delta, bottom = rect.top + rect.height();
-		double vhp = rect.height() / maxv * 0.8f;
-		
-//		((Graphics2D)g).setStroke(new BasicStroke(1));
-		
-		for( int i = 0; i < bars.length; i ++ ) {
-			PriceBar curr = bars[i];
-			
-			if( curr.close > curr.open )
-				p.setColor(Color.RED);
-			else
-				p.setColor(Color.GREEN);
-
-			int vh =  (int) Math.round( curr.volume * vhp );
-			p.setStyle(Paint.Style.FILL);
-			g.drawRect(x, bottom - vh, bar_width, vh, p);
-
-			x -= step;
 		}
 	}
 	

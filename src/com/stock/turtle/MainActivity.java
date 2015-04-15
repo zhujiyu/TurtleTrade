@@ -99,8 +99,7 @@ public class MainActivity extends Activity {
     	List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
     	for( int i = 0; i < 3; i ++ ) {
-    		Map<String, Object> map = null;
-			map = loadStockInfo(codes[i], markets[i], 
+    		Map<String, Object> map = loadStockInfo(codes[i], markets[i], 
 					buy_index, sell_index);
     		map.put("name", names[i]);
     		list.add(map);
