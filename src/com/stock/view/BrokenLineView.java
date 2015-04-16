@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.stock.data.PriceBar;
 import com.stock.data.StockData;
 import com.stock.source.DataSource;
 import com.stock.turtle.R;
@@ -13,6 +14,9 @@ import com.stock.turtle.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 
 public class BrokenLineView extends StockPhoto {
@@ -56,8 +60,18 @@ public class BrokenLineView extends StockPhoto {
     		stocks.add(new StockData("600036", DataSource.MARKET_SHANGHAI));
 	}
 	
-	private void DrawBrokenLine(Canvas canvas, StockData stock) {
-//		if( )
+	protected void draw(Canvas canvas, Paint p, PriceBar[] bars, Rect rect) {
+		double bhp = rect.height() / (high - low);
+		int height = rect.top + rect.height(), middle = rect.width() - step / 2;
+		PriceBar prev = bars[0];
+		
+		for( int i = 1; i < bars.length; i ++ ) {
+			PriceBar curr = bars[i];
+			int y1 = (int) Math.round( (prev.close - low) * bhp );
+			int y2 = (int) Math.round( (curr.close - low) * bhp );
+			canvas.drawLine(middle, height - y1, middle, height - y2, p);
+			middle -= step;
+		}
 	}
 	
 	@Override
@@ -69,7 +83,7 @@ public class BrokenLineView extends StockPhoto {
 			StockData stock = iter.next();
 			if( stock.getBarSet().size() == 0 )
 				continue;
-			DrawBrokenLine(canvas, stock);
+//			DrawBrokenLine(canvas, stock);
 		}
 	}
 }

@@ -30,30 +30,11 @@ public class CandleImage extends StockPhoto {
 	private List<PriceBar> bar_list;
 	private List<StockIndex> indexes = new ArrayList<StockIndex>();
 	
-	private int trans = 0;  ///< transform the initialize position of candle image to left 
-	private int scoll = 0;  ///< scoll screen
-	
-//	public CandleImage(StockData data) {
-//		this.bar_list = data.getBarSet();
-//	}
-	
 	public void AddIndex(StockIndex index) {
 		index.calcIndex(bar_list);
 		indexes.add(index);
 	}
 
-	public void setBarWidth(int width) {
-		this.step = width;
-	}
-	
-	public void tranCandle(int trans) {
-		this.trans = trans;
-	}
-	
-	public void scollCandle(int move) {
-		this.scoll = move;
-	}
-	
 	public void Save(String file, int width, int height) {
 		Bitmap bmp = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 		
@@ -74,7 +55,7 @@ public class CandleImage extends StockPhoto {
 //		}
 	}
 	
-	public void display(Canvas g, Rect rect) {
+	public void display(Canvas canvas, Rect rect) {
 		int divid = Math.round(rect.height() * 0.8f);
 		float b = divid * 0.5f, s = b * scale;
 		Rect topWindow = new Rect(rect.left, rect.top + Math.round(b - s), rect.width(), Math.round(2 * s));
@@ -84,12 +65,12 @@ public class CandleImage extends StockPhoto {
 		p.setColor(background);
 		p.setStyle(Paint.Style.FILL);//设置填满 
 		
-		g.clipRect(rect);
-		g.drawRect(rect, p);
+		canvas.clipRect(rect);
+		canvas.drawRect(rect, p);
 
 		p.setColor(Color.RED);
-		g.drawRect(rect.left + 1, rect.top + 1, rect.width() - 2, divid - 2, p);
-		g.drawRect(btmWindow.left + 1, btmWindow.top, btmWindow.width() - 2, 
+		canvas.drawRect(rect.left + 1, rect.top + 1, rect.width() - 2, divid - 2, p);
+		canvas.drawRect(btmWindow.left + 1, btmWindow.top, btmWindow.width() - 2, 
 				btmWindow.height() - 2, p);
 
 		int width = Math.min(rect.width(), rect.width() + (scoll - trans) * step);
@@ -117,9 +98,19 @@ public class CandleImage extends StockPhoto {
 			maxVolume = Math.max(bars[i].volume, maxVolume);
 		}
 
-		drawVolume(g, p, bars, btmWindow, maxVolume);
-		drawCandle(g, p, bars, topWindow, high, low);
+		drawVolume(canvas, p, bars, btmWindow, maxVolume);
+		drawCandle(canvas, p, bars, topWindow);
 
+	}
+
+	protected void drawIndexInTop(Canvas canvas, StockIndex index, Rect topWindow) {
+		int right = topWindow.width() - step / 2;
+		double  scale1 = - topWindow.height() / (high - low);
+		double  base1 = topWindow.top + topWindow.height() - low * scale1;
+		index.drawIndex(canvas, first, count, step, right, scale1, base1);
+	}
+	
+	protected void drawIndexes(Canvas canvas, Rect topWindow, Rect btmWindow) {
 		int right = topWindow.width() - step / 2;
 		double  scale1 = - topWindow.height() / (high - low), 
 				scale2 = - btmWindow.height() * 0.8 / maxVolume;
@@ -131,16 +122,16 @@ public class CandleImage extends StockPhoto {
 			StockIndex index = _it.next();
 			
 			if( index.getWindowIndex() == StockIndex.WINDOW_TOP )
-				index.drawIndex(g, first, count, step, right, scale1, base1);
+				index.drawIndex(canvas, first, count, step, right, scale1, base1);
 			else if( index.getWindowIndex() == StockIndex.WINDOW_BOTTOM )
-				index.drawIndex(g, first, count, step, right, scale2, base2);
+				index.drawIndex(canvas, first, count, step, right, scale2, base2);
 		}
 	}
 	
-	private void drawCandle(Canvas g, Paint p, PriceBar[] bars, Rect rect, double high, double low) {
+	private void drawCandle(Canvas g, Paint p, PriceBar[] bars, Rect rect) {
 		int delta = step / 8, bar_width = step * 3 / 4;
-		int x = rect.width() - step + delta, height = rect.top + rect.height(),
-				middle = rect.width() - step / 2;
+		int x = rect.width() - step + delta;
+		int height = rect.top + rect.height(), middle = rect.width() - step / 2;
 		double bhp = rect.height() / (high - low);
 		
 //		Graphics2D g2d = (Graphics2D)g;
